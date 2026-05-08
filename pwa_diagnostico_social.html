@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1a5f2a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="Diagnostico Social Comunitario - PWA">
+<title>Diagnostico Social v3.0</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;color:#333;overflow-x:hidden}
+body{position:relative}
+:root{--primary:#1a5f2a;--primary-dark:#0d3d16;--accent:#e8b923;--danger:#c0392b;--success:#27ae60;--info:#2980b9;--bg:#f0f2f5;--card:#fff;--text:#333;--text-light:#666;--border:#ddd;--shadow:0 2px 8px rgba(0,0,0,.12)}
+.app-container{max-width:480px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative}
+.header{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;padding:12px 16px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
+.header h1{font-size:1.1rem;font-weight:600;display:flex;align-items:center;gap:8px}
+.header .subtitle{font-size:.75rem;opacity:.85;margin-top:2px}
+.header .status-badge{font-size:.65rem;padding:2px 8px;border-radius:12px;background:rgba(255,255,255,.2);margin-left:auto}
+.header .status-badge.online{background:var(--success);color:#fff}
+.header .status-badge.offline{background:var(--danger);color:#fff}
+.content{padding:16px;padding-bottom:80px}
+.card{background:var(--card);border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.card-title{font-size:1rem;font-weight:600;color:var(--primary);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.form-group{margin-bottom:14px}
+.form-label{display:block;font-size:.85rem;font-weight:500;color:var(--text-light);margin-bottom:5px}
+.form-label .required{color:var(--danger);margin-left:2px}
+.form-input,.form-select,.form-textarea{width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:.95rem;background:#fff;transition:border-color .2s,box-shadow .2s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,95,42,.15)}
+.form-textarea{min-height:80px;resize:vertical}
+.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+.radio-group,.checkbox-group{display:flex;flex-direction:column;gap:8px}
+.radio-item,.checkbox-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:all .2s;background:#fff}
+.radio-item:hover,.checkbox-item:hover{border-color:var(--primary);background:#f8fff8}
+.radio-item.selected,.checkbox-item.selected{border-color:var(--primary);background:#e8f5e9}
+.radio-item input,.checkbox-item input{width:20px;height:20px;accent-color:var(--primary);cursor:pointer}
+.radio-item label,.checkbox-item label{font-size:.9rem;cursor:pointer;flex:1}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 20px;border:none;border-radius:10px;font-size:.95rem;font-weight:600;cursor:pointer;transition:all .2s;width:100%;margin-bottom:10px}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;box-shadow:0 4px 12px rgba(26,95,42,.3)}
+.btn-secondary{background:#fff;color:var(--primary);border:2px solid var(--primary)}
+.btn-accent{background:linear-gradient(135deg,var(--accent),#d4a017);color:#1a1a1a;box-shadow:0 4px 12px rgba(232,185,35,.3)}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-success{background:var(--success);color:#fff}
+.btn-info{background:var(--info);color:#fff}
+.btn-sm{padding:8px 14px;font-size:.8rem}
+.btn-lg{padding:16px 24px;font-size:1.05rem}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.pin-display{display:flex;justify-content:center;gap:12px;margin:20px 0}
+.pin-dot{width:16px;height:16px;border-radius:50%;border:3px solid var(--border);background:#fff;transition:all .3s}
+.pin-dot.filled{background:var(--primary);border-color:var(--primary);transform:scale(1.2)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:280px;margin:0 auto}
+.pin-btn{padding:18px;font-size:1.4rem;font-weight:600;border:2px solid var(--border);border-radius:12px;background:#fff;cursor:pointer;transition:all .2s}
+.pin-btn:active{background:var(--primary);color:#fff;border-color:var(--primary);transform:scale(.95)}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#fff;border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:8px 0;z-index:100;box-shadow:0 -2px 8px rgba(0,0,0,.08)}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px;color:var(--text-light);font-size:.7rem;text-decoration:none;cursor:pointer;transition:color .2s;border:none;background:none}
+.nav-item.active{color:var(--primary);font-weight:600}
+.nav-item .nav-icon{font-size:1.3rem}
+.screen{display:none;animation:fadeIn .3s ease}
+.screen.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.login-screen{text-align:center;padding:40px 20px}
+.login-logo{font-size:3rem;margin-bottom:10px}
+.login-title{font-size:1.3rem;font-weight:700;color:var(--primary);margin-bottom:8px}
+.login-subtitle{font-size:.85rem;color:var(--text-light);margin-bottom:30px}
+.login-error{color:var(--danger);font-size:.85rem;margin:10px 0;min-height:20px}
+.menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.menu-item{background:var(--card);border-radius:12px;padding:20px 12px;text-align:center;cursor:pointer;transition:all .2s;box-shadow:var(--shadow);border:2px solid transparent}
+.menu-item:hover{border-color:var(--primary);transform:translateY(-2px)}
+.menu-item .menu-icon{font-size:2rem;margin-bottom:8px}
+.menu-item .menu-label{font-size:.85rem;font-weight:600;color:var(--text)}
+.menu-item .menu-desc{font-size:.7rem;color:var(--text-light);margin-top:4px}
+.autocomplete-wrap{position:relative}
+.autocomplete-list{position:absolute;top:100%;left:0;right:0;background:#fff;border:2px solid var(--primary);border-radius:0 0 10px 10px;max-height:200px;overflow-y:auto;z-index:50;box-shadow:var(--shadow);display:none}
+.autocomplete-list.visible{display:block}
+.autocomplete-item{padding:10px 14px;cursor:pointer;border-bottom:1px solid #f0f0f0;font-size:.9rem}
+.autocomplete-item:hover{background:#e8f5e9}
+.autocomplete-item .ac-cedula{font-weight:600;color:var(--primary)}
+.autocomplete-item .ac-nombre{color:var(--text-light);font-size:.8rem}
+.progress-bar{height:6px;background:#e0e0e0;border-radius:3px;overflow:hidden;margin-bottom:16px}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--success));border-radius:3px;transition:width .3s}
+.toast{position:fixed;top:60px;left:50%;transform:translateX(-50%) translateY(-100px);background:#333;color:#fff;padding:12px 20px;border-radius:10px;font-size:.9rem;z-index:200;transition:transform .3s;max-width:90%;text-align:center}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.success{background:var(--success)}
+.toast.error{background:var(--danger)}
+.toast.info{background:var(--info)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:150;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.active{display:flex}
+.modal{background:#fff;border-radius:16px;padding:24px;max-width:400px;width:100%;max-height:80vh;overflow-y:auto}
+.modal-title{font-size:1.1rem;font-weight:600;margin-bottom:16px;color:var(--primary)}
+.queue-item{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;background:#fff}
+.queue-item .q-info{flex:1}
+.queue-item .q-type{font-size:.8rem;font-weight:600;color:var(--primary)}
+.queue-item .q-date{font-size:.7rem;color:var(--text-light)}
+.dashboard-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.dashboard-card{background:var(--card);border-radius:10px;padding:14px;text-align:center;box-shadow:var(--shadow)}
+.dashboard-card .d-number{font-size:1.6rem;font-weight:700;color:var(--primary)}
+.dashboard-card .d-label{font-size:.75rem;color:var(--text-light);margin-top:4px}
+.section-title{font-size:1rem;font-weight:600;color:var(--primary);margin:20px 0 12px;padding-bottom:8px;border-bottom:2px solid var(--primary);display:flex;align-items:center;gap:8px}
+.gps-status{display:flex;align-items:center;gap:6px;font-size:.8rem;color:var(--text-light);padding:8px 12px;background:#f8f8f8;border-radius:8px;margin-bottom:12px}
+.gps-status .gps-dot{width:10px;height:10px;border-radius:50%;background:var(--danger)}
+.gps-status .gps-dot.active{background:var(--success);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@media(min-width:481px){.app-container{box-shadow:0 0 20px rgba(0,0,0,.1)}}
+@media print{.header,.bottom-nav,.btn{display:none!important}.card{box-shadow:none;border:1px solid #ddd}}
+</style>
+<base target="_blank">
+</head>
+<body>
+<div class="app-container">
+
+<header class="header" id="header">
+  <div style="display:flex;align-items:center;justify-content:space-between">
+    <div><h1>Diagnostico Social</h1><div class="subtitle" id="headerSubtitle">v3.0 - Comunitario</div></div>
+    <span class="status-badge offline" id="onlineStatus">OFFLINE</span>
+  </div>
+</header>
+
+<div class="toast" id="toast"></div>
+<div class="modal-overlay" id="modalOverlay"><div class="modal" id="modalContent"></div></div>
+
+<!-- LOGIN -->
+<div class="screen active" id="screenLogin">
+  <div class="login-screen">
+    <div class="login-logo">🏛️</div>
+    <div class="login-title">Diagnostico Social</div>
+    <div class="login-subtitle">Ingrese su PIN de 4 digitos</div>
+    <div class="pin-display" id="pinDisplay">
+      <div class="pin-dot" data-i="0"></div><div class="pin-dot" data-i="1"></div>
+      <div class="pin-dot" data-i="2"></div><div class="pin-dot" data-i="3"></div>
+    </div>
+    <div class="login-error" id="loginError"></div>
+    <div class="pin-pad">
+      <button class="pin-btn" onclick="app.addPin(1)">1</button>
+      <button class="pin-btn" onclick="app.addPin(2)">2</button>
+      <button class="pin-btn" onclick="app.addPin(3)">3</button>
+      <button class="pin-btn" onclick="app.addPin(4)">4</button>
+      <button class="pin-btn" onclick="app.addPin(5)">5</button>
+      <button class="pin-btn" onclick="app.addPin(6)">6</button>
+      <button class="pin-btn" onclick="app.addPin(7)">7</button>
+      <button class="pin-btn" onclick="app.addPin(8)">8</button>
+      <button class="pin-btn" onclick="app.addPin(9)">9</button>
+      <button class="pin-btn" onclick="app.clearPin()" style="font-size:.9rem">⌫</button>
+      <button class="pin-btn" onclick="app.addPin(0)">0</button>
+      <button class="pin-btn" onclick="app.submitLogin()" style="font-size:.9rem">✓</button>
+    </div>
+    <div style="margin-top:30px;font-size:.75rem;color:#999">PIN Admin: 0000<br><span id="versionApp">v3.0</span></div>
+  </div>
+</div>
+
+<!-- MENU -->
+<div class="screen" id="screenMenu">
+  <div class="content">
+    <div class="card">
+      <div class="card-title">Bienvenido, <span id="userName">Encuestador</span></div>
+      <div style="font-size:.85rem;color:#666" id="userRole">Rol: Encuestador</div>
+    </div>
+    <div class="menu-grid" id="menuGrid">
+      <div class="menu-item" onclick="app.goToSurvey('adultos_verif')">
+        <div class="menu-icon">👴</div><div class="menu-label">Adultos Verif.</div><div class="menu-desc">Verificacion rapida</div>
+      </div>
+      <div class="menu-item" onclick="app.goToSurvey('adultos_reg')">
+        <div class="menu-icon">📝</div><div class="menu-label">Adultos Registro</div><div class="menu-desc">Registro completo</div>
+      </div>
+      <div class="menu-item" onclick="app.goToSurvey('nna')">
+        <div class="menu-icon">🎒</div><div class="menu-label">NNA No Escolarizado</div><div class="menu-desc">Ninos y adolescentes</div>
+      </div>
+      <div class="menu-item" onclick="app.goToQueue()">
+        <div class="menu-icon">📤</div><div class="menu-label">Sincronizar</div><div class="menu-desc" id="queueCountDesc">0 pendientes</div>
+      </div>
+    </div>
+    <div id="adminMenu" style="display:none;margin-top:12px">
+      <div class="section-title">Administracion</div>
+      <div class="menu-grid">
+        <div class="menu-item" onclick="app.goToDashboard()">
+          <div class="menu-icon">📊</div><div class="menu-label">Dashboard</div><div class="menu-desc">Resumen de encuestas</div>
+        </div>
+        <div class="menu-item" onclick="app.goToEncuestadores()">
+          <div class="menu-icon">👥</div><div class="menu-label">Encuestadores</div><div class="menu-desc">Gestion de PINs</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SURVEY ADULTOS VERIF -->
+<div class="screen" id="screenAdultosVerif">
+  <div class="content">
+    <div class="progress-bar"><div class="progress-fill" id="progVerif" style="width:0%"></div></div>
+    <div class="gps-status" id="gpsVerif"><div class="gps-dot" id="gpsDotVerif"></div><span id="gpsTextVerif">Obteniendo ubicacion...</span></div>
+
+    <div class="section-title">I. Datos Basicos</div>
+    <div class="card">
+      <div class="form-group autocomplete-wrap">
+        <label class="form-label">Cedula de Identidad <span class="required">*</span></label>
+        <input type="text" class="form-input" id="av_cedula" placeholder="Ej: 12345678" oninput="app.buscarVecino(this.value,'av')">
+        <div class="autocomplete-list" id="ac_av"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Nombre y Apellido <span class="required">*</span></label><input type="text" class="form-input" id="av_nombre" placeholder="Ingrese nombre completo"></div>
+      <div class="form-group"><label class="form-label">Fecha de Nacimiento</label><input type="date" class="form-input" id="av_fecha_nac"></div>
+      <div class="form-group"><label class="form-label">Edad</label><input type="number" class="form-input" id="av_edad" placeholder="Ej: 65" min="0" max="120"></div>
+    </div>
+
+    <div class="section-title">II. Situacion del Nucleo Familiar</div>
+    <div class="card">
+      <div class="form-group"><label class="form-label">5. Actualmente vive solo(a)?</label>
+        <div class="radio-group"><div class="radio-item" onclick="app.selectRadio(this,'av_vive_solo','SI')"><input type="radio" name="av_vive_solo" value="SI"><label>SI</label></div><div class="radio-item" onclick="app.selectRadio(this,'av_vive_solo','NO')"><input type="radio" name="av_vive_solo" value="NO"><label>NO</label></div></div></div>
+      <div class="form-group"><label class="form-label">6. Es sosten de hogar?</label>
+        <div class="radio-group"><div class="radio-item" onclick="app.selectRadio(this,'av_sosten','SI')"><input type="radio" name="av_sosten" value="SI"><label>SI</label></div><div class="radio-item" onclick="app.selectRadio(this,'av_sosten','NO')"><input type="radio" name="av_sosten" value="NO"><label>NO</label></div></div></div>
+      <div class="form-group"><label class="form-label">7. Los ingresos familiares cubren necesidades basicas?</label>
+        <div class="radio-group"><div class="radio-item" onclick="app.selectRadio(this,'av_ingresos','SI')"><input type="radio" name="av_ingresos" value="SI"><label>SI</label></div><div class="radio-item" onclick="app.selectRadio(this,'av_ingresos','NO')"><input type="radio" name="av_ingresos" value="NO"><label>NO</label></div></div></div>
+    </div>
+
+    <div class="section-title">III. Salud</div>
+    <div class="card">
+      <div class="form-group"><label class="form-label">8. Tiene condicion de salud con alta dependencia fisica?</label>
+        <div class="radio-group"><div class="radio-item" onclick="app.selectRadio(this,'av_salud_dep','SI')"><input type="radio" name="av_salud_dep" value="SI"><label>SI</label></div><div class="radio-item" onclick="app.selectRadio(this,'av_salud_dep','NO')"><input type="radio" name="av_salud_dep" value="NO"><label>NO</label></div></div></div>
+      <div class="form-group" id="av_salud_detalle" style="display:none">
+        <label class="form-label">Especifique condicion(es):</label>
+        <div class="checkbox-group">
+          <div class="checkbox-item" onclick="app.toggleCheckbox(this,'av_salud_encamado')"><input type="checkbox" id="av_salud_encamado"><label>Encamado/a</label></div>
+          <div class="checkbox-item" onclick="app.toggleCheckbox(this,'av_salud_parkinson')"><input type="checkbox" id="av_salud_parkinson"><label>Parkinson</label></div>
+          <div class="checkbox-item" onclick="app.toggleCheckbox(this,'av_salud_alzheimer')"><input type="checkbox" id="av_salud_alzheimer"><label>Alzheimer</label></div>
+          <div class="checkbox-item" onclick="app.toggleCheckbox(this,'av_salud_trastorno')"><input type="checkbox" id="av_salud_trastorno"><label>Trastorno Neurocognitivo Mayor</label></div>
+          <div class="checkbox-item" onclick="app.toggleCheckbox(this,'av_salud_renal')"><input type="checkbox" id="av_salud_renal"><label>Insuficiencia Renal</label></div>
+          <div class="checkbox-item" onclick="app.toggleCheckbox(this,'av_salud_cancer')"><input type="checkbox" id="av_salud_cancer"><label>Cancer</label></div>
+          <div class="checkbox-item" onclick="app.toggleCheckbox(this,'av_salud_cardiaca')"><input type="checkbox" id="av_salud_cardiaca"><label>Insuficiencia Cardiaca</label></div>
+          <div class="checkbox-item" onclick="app.toggleCheckbox(this,'av_salud_artritis')"><input type="checkbox" id="av_salud_artritis"><label>Artritis Reumatoidea</label></div>
+          <div class="checkbox-item" onclick="app.toggleCheckbox(this,'av_salud_esclerosis')"><input type="checkbox" id="av_salud_esclerosis"><label>Esclerosis Multiple</label></div>
+          <div class="checkbox-item" onclick="app.toggleCheckbox(this,'av_salud_otro')"><input type="checkbox" id="av_salud_otro"><label>Otro</label></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">IV. Datos Geograficos</div>
+    <div class="card">
+      <div class="form-group"><label class="form-label">Estado</label><input type="text" class="form-input" id="av_estado" placeholder="Ej: Miranda"></div>
+      <div class="form-group"><label class="form-label">Municipio</label><input type="text" class="form-input" id="av_municipio" placeholder="Ej: Sucre"></div>
+      <div class="form-group"><label class="form-label">Parroquia</label><input type="text" class="form-input" id="av_parroquia" placeholder="Ej: Petare"></div>
+      <div class="form-group"><label class="form-label">Circuito / Comuna</label><input type="text" class="form-input" id="av_circuito" placeholder="Ej: Comuna 5"></div>
+      <div class="form-group"><label class="form-label">Consejo Comunal</label><input type="text" class="form-input" id="av_consejo" placeholder="Nombre del consejo"></div>
+      <div class="form-group"><label class="form-label">Calle / Sector</label><input type="text" class="form-input" id="av_calle" placeholder="Ej: Calle Principal"></div>
+    </div>
+
+    <div class="section-title">V. Necesidad y Estado</div>
+    <div class="card">
+      <div class="form-group"><label class="form-label">Necesidad principal identificada</label><textarea class="form-textarea" id="av_necesidad" placeholder="Describa la necesidad principal..."></textarea></div>
+      <div class="form-group"><label class="form-label">Estado del Caso</label><select class="form-select" id="av_estado_caso"><option value="pendiente">Pendiente</option><option value="en_proceso">En Proceso</option><option value="atendido">Atendido</option><option value="cerrado">Cerrado</option></select></div>
+    </div>
+
+    <button class="btn btn-primary btn-lg" onclick="app.guardarEncuesta('adultos_verif')">Guardar Encuesta</button>
+    <button class="btn btn-secondary" onclick="app.goToMenu()">Volver al Menu</button>
+  </div>
+</div>
+
+<!-- SURVEY ADULTOS REG -->
+<div class="screen" id="screenAdultosReg">
+  <div class="content">
+    <div class="progress-bar"><div class="progress-fill" id="progReg" style="width:0%"></div></div>
+    <div class="gps-status" id="gpsReg"><div class="gps-dot" id="gpsDotReg"></div><span id="gpsTextReg">Obteniendo ubicacion...</span></div>
+
+    <div class="section-title">I. Datos del Adulto Mayor</div>
+    <div class="card">
+      <div class="form-group autocomplete-wrap">
+        <label class="form-label">Cedula de Identidad <span class="required">*</span></label>
+        <input type="text" class="form-input" id="ar_cedula" placeholder="Ej: 12345678" oninput="app.buscarVecino(this.value,'ar')">
+        <div class="autocomplete-list" id="ac_ar"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Nombre y Apellido <span class="required">*</span></label><input type="text" class="form-input" id="ar_nombre" placeholder="Ingrese nombre completo"></div>
+      <div class="form-group"><label class="form-label">Fecha de Nacimiento</label><input type="date" class="form-input" id="ar_fecha_nac"></div>
+      <div class="form-group"><label class="form-label">Edad</label><input type="number" class="form-input" id="ar_edad" placeholder="Ej: 65" min="0" max="120"></div>
+      <div class="form-group"><label class="form-label">Telefono</label><input type="tel" class="form-input" id="ar_telefono" placeholder="Ej: (424) 123-4567"></div>
+    </div>
+
+    <div class="section-title">II. Situacion del Nucleo Familiar</div>
+    <div class="card">
+      <div class="form-group"><label class="form-label">a) Vive solo/a o comparte vivienda?</label>
+        <div class="radio-group"><div class="radio-item" onclick="app.selectRadio(this,'ar_vive_solo','solo')"><input type="radio" name="ar_vive_solo" value="solo"><label>Vive completamente solo/a</label></div><div class="radio-item" onclick="app.selectRadio(this,'ar_vive_solo','familiares')"><input type="radio" name="ar_vive_solo" value="familiares"><label>Comparte con familiares</label></div></div></div>
+      <div class="form-group"><label class="form-label">b) Cantidad de miembros del grupo familiar</label>
+        <div class="radio-group"><div class="radio-item" onclick="app.selectRadio(this,'ar_cant_miembros','1-3')"><input type="radio" name="ar_cant_miembros" value="1-3"><label>1-3 personas</label></div><div class="radio-item" onclick="app.selectRadio(this,'ar_cant_miembros','3-5')"><input type="radio" name="ar_cant_miembros" value="3-5"><label>3-5 personas</label></div><div class="radio-item" onclick="app.selectRadio(this,'ar_cant_miembros','5+')"><input type="radio" name="ar_cant_miembros" value="5+"><label>Mayor a 5 personas</label></div></div></div>
+      <div class="form-group"><label class="form-label">c) Miembros que perciben ingresos</label>
+        <div class="radio-group"><div class="radio-item" onclick="app.selectRadio(this,'ar_miembros_ingreso','1')"><input type="radio" name="ar_miembros_ingreso" value="1"><label>1</label></div><div class="radio-item" onclick="app.selectRadio(this,'ar_miembros_ingreso','2')"><input type="radio" name="ar_miembros_ingreso" value="2"><label>2</label></div><div class="radio-item" onclick="app.selectRadio(this,'ar_miembros_ingreso','mas_de_2')"><input type="radio" name="ar_miembros_ingreso" value="mas_de_2"><label>Mas de 2</label></div></div></div>
+      <div class="form-group"><label class="form-label">Es sosten de hogar?</label>
+        <div class="radio-group"><div class="radio-item" onclick="app.selectRadio(this,'ar_sosten','SI')"><input type="radio" name="ar_sosten" value="SI"><label>SI</label></div><div class="radio-item" onclick="app.selectRadio(this,'ar_sosten','NO')"><input type="radio" name="ar_sosten" value="NO"><label>NO</label></div></div></div>
+      <div class="form-group"><label class="form-label">Situacion de la vivienda</label>
+        <select class="form-select" id="ar_situacion_vivienda"><option value="">Seleccione...</option><option value="propia">Propia</option><option value="alquilada">Alquilada</option><option value="prestada">Prestada</option><option value="ocupada">Ocupada</option><option value="otra">Otra</option></select></div>
+    </div>
+
+    <div class="section-title">III. Salud</div>
+    <div class="card">
+      <div class="form-group"><label class="form-label">Condiciones de salud / discapacidad (marque todas las que apliquen)</label>
+        <div class="checkbox-group">
+          <div class="checkbox-item" onclick="app.toggleCheckbox(this,'ar_salud_encamado')"><input type="checkbox" id="ar_salud_encamado"><label>Encamado/a</label></div>
+          <div class="checkbox-item" onclick="app.toggleCheckbox(this,'ar_salud_parkinson')"><input type="checkbox" id="ar_salud_parkinson"><label>Parkinson</label></div>
+          <div class="checkbox-item" onclick="app.toggleCheckbox(this,'ar_salud_alzheimer')"><input type="checkbox" id="ar_salud_alzheimer"><label>Alzheimer</label></div>
+          <div class="checkbox-item" onclick="app.toggleCheckbox(this,'ar_salud_trastorno')"><input type="checkbox" id="ar_salud_trastorno"><label>Trastorno Neurocognitivo Mayor</label></div>
+          <div class="checkbox-item" onclick="app.toggleCheckbox(this,'ar_salud_renal')"><input type="checkbox" id="ar_salud_renal"><label>Insuficiencia Renal</label></div>
+          <div class="checkbox-item" onclick="app.toggleCheckbox(this,'ar_salud_cancer')"><input type="checkbox" id="ar_salud_cancer"><label>Cancer</label></div>
+          <div class="checkbox-item" onclick="app.toggleCheckbox(this,'ar_salud_cardiaca')"><input type="checkbox" id="ar_salud_cardiaca"><label>Insuficiencia Cardiaca</label></div>
+          <div class="checkbox-item" onclick="app.toggleCheckbox(this,'ar_salud_artritis')"><input type="checkbox" id="ar_salud_artritis"><label>Artritis Reumatoidea</label></div>
+          <div class="checkbox-item" onclick="app.toggleCheckbox(this,'ar_salud_esclerosis')"><input type="checkbox" id="ar_salud_esclerosis"><label>Esclerosis Multiple</label></div>
+          <div class="checkbox-item" onclick="app.toggleCheckbox(this,'ar_salud_otro')"><input type="checkbox" id="ar_salud_otro"><label>Otro</label></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">IV. Situacion Economica</div>
+    <div class="card">
+      <div class="form-group"><label class="form-label">Los ingresos del nucleo familiar permiten cubrir necesidades basicas?</label>
+        <div class="radio-group"><div class="radio-item" onclick="app.selectRadio(this,'ar_economica','todo')"><input type="radio" name="ar_economica" value="todo"><label>Si alcanzan para cubrir todo</label></div><div class="radio-item" onclick="app.selectRadio(this,'ar_economica','estricto')"><input type="radio" name="ar_economica" value="estricto"><label>Permiten cubrir lo estrictamente necesario</label></div><div class="radio-item" onclick="app.selectRadio(this,'ar_economica','no_alcanza')"><input type="radio" name="ar_economica" value="no_alcanza"><label>No alcanzan para lo basico</label></div><div class="radio-item" onclick="app.selectRadio(this,'ar_economica','depende')"><input type="radio" name="ar_economica" value="depende"><label>Depende totalmente de ayuda externa</label></div></div></div>
+    </div>
+
+    <div class="section-title">V. Datos Geograficos</div>
+    <div class="card">
+      <div class="form-group"><label class="form-label">Estado</label><input type="text" class="form-input" id="ar_estado" placeholder="Ej: Miranda"></div>
+      <div class="form-group"><label class="form-label">Municipio</label><input type="text" class="form-input" id="ar_municipio" placeholder="Ej: Sucre"></div>
+      <div class="form-group"><label class="form-label">Parroquia</label><input type="text" class="form-input" id="ar_parroquia" placeholder="Ej: Petare"></div>
+      <div class="form-group"><label class="form-label">Circuito / Comuna</label><input type="text" class="form-input" id="ar_circuito" placeholder="Ej: Comuna 5"></div>
+      <div class="form-group"><label class="form-label">Consejo Comunal</label><input type="text" class="form-input" id="ar_consejo" placeholder="Nombre del consejo"></div>
+      <div class="form-group"><label class="form-label">Calle / Sector</label><input type="text" class="form-input" id="ar_calle" placeholder="Ej: Calle Principal"></div>
+    </div>
+
+    <div class="section-title">VI. Necesidad y Estado</div>
+    <div class="card">
+      <div class="form-group"><label class="form-label">Necesidad principal identificada</label><textarea class="form-textarea" id="ar_necesidad" placeholder="Describa la necesidad principal..."></textarea></div>
+      <div class="form-group"><label class="form-label">Estado del Caso</label><select class="form-select" id="ar_estado_caso"><option value="pendiente">Pendiente</option><option value="en_proceso">En Proceso</option><option value="atendido">Atendido</option><option value="cerrado">Cerrado</option></select></div>
+    </div>
+
+    <button class="btn btn-primary btn-lg" onclick="app.guardarEncuesta('adultos_reg')">Guardar Encuesta</button>
+    <button class="btn btn-secondary" onclick="app.goToMenu()">Volver al Menu</button>
+  </div>
+</div>
+
+<!-- SURVEY NNA -->
+<div class="screen" id="screenNNA">
+  <div class="content">
+    <div class="progress-bar"><div class="progress-fill" id="progNNA" style="width:0%"></div></div>
+    <div class="gps-status" id="gpsNNA"><div class="gps-dot" id="gpsDotNNA"></div><span id="gpsTextNNA">Obteniendo ubicacion...</span></div>
+
+    <div class="section-title">I. Datos Geograficos</div>
+    <div class="card">
+      <div class="form-group"><label class="form-label">Estado</label><input type="text" class="form-input" id="nna_estado" placeholder="Ej: Miranda"></div>
+      <div class="form-group"><label class="form-label">Municipio</label><input type="text" class="form-input" id="nna_municipio" placeholder="Ej: Sucre"></div>
+      <div class="form-group"><label class="form-label">Parroquia</label><input type="text" class="form-input" id="nna_parroquia" placeholder="Ej: Petare"></div>
+      <div class="form-group"><label class="form-label">Circuito / Comuna</label><input type="text" class="form-input" id="nna_circuito" placeholder="Ej: Comuna 5"></div>
+      <div class="form-group"><label class="form-label">Consejo Comunal</label><input type="text" class="form-input" id="nna_consejo" placeholder="Nombre del consejo"></div>
+      <div class="form-group"><label class="form-label">Calle / Sector</label><input type="text" class="form-input" id="nna_calle" placeholder="Ej: Calle Principal"></div>
+    </div>
+
+    <div class="section-title">II. Datos del NNA</div>
+    <div class="card">
+      <div class="form-group"><label class="form-label">Cedula de Identidad (si aplica)</label><input type="text" class="form-input" id="nna_cedula" placeholder="Ej: 12345678"></div>
+      <div class="form-group"><label class="form-label">Nombre y Apellido <span class="required">*</span></label><input type="text" class="form-input" id="nna_nombre" placeholder="Nombre completo del NNA"></div>
+      <div class="form-group"><label class="form-label">Fecha de Nacimiento</label><input type="date" class="form-input" id="nna_fecha_nac"></div>
+      <div class="form-group"><label class="form-label">Edad</label><input type="number" class="form-input" id="nna_edad" placeholder="Ej: 12" min="0" max="18"></div>
+      <div class="form-group"><label class="form-label">Ultimo grado cursado</label><input type="text" class="form-input" id="nna_grado" placeholder="Ej: 6to grado"></div>
+    </div>
+
+    <div class="section-title">III. Datos del Representante</div>
+    <div class="card">
+      <div class="form-group autocomplete-wrap">
+        <label class="form-label">Cedula del Representante</label>
+        <input type="text" class="form-input" id="rep_cedula" placeholder="Ej: 12345678" oninput="app.buscarVecino(this.value,'rep')">
+        <div class="autocomplete-list" id="ac_rep"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Nombre y Apellido del Representante</label><input type="text" class="form-input" id="rep_nombre" placeholder="Nombre completo"></div>
+      <div class="form-group"><label class="form-label">Telefono</label><input type="tel" class="form-input" id="rep_telefono" placeholder="Ej: (424) 123-4567"></div>
+      <div class="form-group"><label class="form-label">Parentesco</label>
+        <select class="form-select" id="rep_parentesco"><option value="">Seleccione...</option><option value="madre">Madre</option><option value="padre">Padre</option><option value="abuela">Abuela</option><option value="abuelo">Abuelo</option><option value="tia">Tia</option><option value="tio">Tio</option><option value="hermana">Hermana</option><option value="hermano">Hermano</option><option value="tutor">Tutor Legal</option><option value="otro">Otro</option></select></div>
+    </div>
+
+    <div class="section-title">IV. Causas de la Desescolarizacion</div>
+    <div class="card"><div class="card-title">Falta de Documentos</div>
+      <div class="checkbox-group">
+        <div class="checkbox-item" onclick="app.toggleCheckbox(this,'nna_doc_cedula')"><input type="checkbox" id="nna_doc_cedula"><label>Falta de Cedula</label></div>
+        <div class="checkbox-item" onclick="app.toggleCheckbox(this,'nna_doc_partida')"><input type="checkbox" id="nna_doc_partida"><label>Falta de Partida de Nacimiento</label></div>
+        <div class="checkbox-item" onclick="app.toggleCheckbox(this,'nna_doc_constancia')"><input type="checkbox" id="nna_doc_constancia"><label>Falta de Constancia de Estudios</label></div>
+        <div class="checkbox-item" onclick="app.toggleCheckbox(this,'nna_doc_otro')"><input type="checkbox" id="nna_doc_otro"><label>Otro</label></div>
+      </div>
+    </div>
+    <div class="card"><div class="card-title">Problemas de Acceso</div>
+      <div class="checkbox-group">
+        <div class="checkbox-item" onclick="app.toggleCheckbox(this,'nna_acceso_lejania')"><input type="checkbox" id="nna_acceso_lejania"><label>Lejania del plantel</label></div>
+        <div class="checkbox-item" onclick="app.toggleCheckbox(this,'nna_acceso_transporte')"><input type="checkbox" id="nna_acceso_transporte"><label>Falta de transporte</label></div>
+        <div class="checkbox-item" onclick="app.toggleCheckbox(this,'nna_acceso_riesgos')"><input type="checkbox" id="nna_acceso_riesgos"><label>Riesgos en la ruta (delincuencia, etc.)</label></div>
+        <div class="checkbox-item" onclick="app.toggleCheckbox(this,'nna_acceso_otro')"><input type="checkbox" id="nna_acceso_otro"><label>Otro</label></div>
+      </div>
+    </div>
+    <div class="card"><div class="card-title">Motivos Laborales</div>
+      <div class="checkbox-group">
+        <div class="checkbox-item" onclick="app.toggleCheckbox(this,'nna_laboral_aportar')"><input type="checkbox" id="nna_laboral_aportar"><label>Aportar al hogar</label></div>
+        <div class="checkbox-item" onclick="app.toggleCheckbox(this,'nna_laboral_informal')"><input type="checkbox" id="nna_laboral_informal"><label>Trabajo informal</label></div>
+        <div class="checkbox-item" onclick="app.toggleCheckbox(this,'nna_laboral_rep')"><input type="checkbox" id="nna_laboral_rep"><label>Trabajo del representante (falta de cuidado)</label></div>
+        <div class="checkbox-item" onclick="app.toggleCheckbox(this,'nna_laboral_hermanos')"><input type="checkbox" id="nna_laboral_hermanos"><label>Cuidado de hermanos</label></div>
+        <div class="checkbox-item" onclick="app.toggleCheckbox(this,'nna_laboral_otro')"><input type="checkbox" id="nna_laboral_otro"><label>Otro</label></div>
+      </div>
+    </div>
+    <div class="card"><div class="card-title">Falta de Tutelaje / Orientacion Legal</div>
+      <div class="checkbox-group">
+        <div class="checkbox-item" onclick="app.toggleCheckbox(this,'nna_tutelaje_ausencia')"><input type="checkbox" id="nna_tutelaje_ausencia"><label>Ausencia de un tutor legal</label></div>
+        <div class="checkbox-item" onclick="app.toggleCheckbox(this,'nna_tutelaje_desconocimiento')"><input type="checkbox" id="nna_tutelaje_desconocimiento"><label>Desconocimiento de pasos para inscripcion</label></div>
+        <div class="checkbox-item" onclick="app.toggleCheckbox(this,'nna_tutelaje_acompanamiento')"><input type="checkbox" id="nna_tutelaje_acompanamiento"><label>Falta de acompanamiento familiar</label></div>
+        <div class="checkbox-item" onclick="app.toggleCheckbox(this,'nna_tutelaje_otro')"><input type="checkbox" id="nna_tutelaje_otro"><label>Otro</label></div>
+      </div>
+    </div>
+    <div class="card"><div class="card-title">Problemas Economicos</div>
+      <div class="checkbox-group">
+        <div class="checkbox-item" onclick="app.toggleCheckbox(this,'nna_economico_utiles')"><input type="checkbox" id="nna_economico_utiles"><label>Falta de recursos para utiles/uniformes</label></div>
+        <div class="checkbox-item" onclick="app.toggleCheckbox(this,'nna_economico_alimentacion')"><input type="checkbox" id="nna_economico_alimentacion"><label>Falta de recursos para alimentacion</label></div>
+        <div class="checkbox-item" onclick="app.toggleCheckbox(this,'nna_economico_deudas')"><input type="checkbox" id="nna_economico_deudas"><label>Deudas familiares</label></div>
+        <div class="checkbox-item" onclick="app.toggleCheckbox(this,'nna_economico_inestabilidad')"><input type="checkbox" id="nna_economico_inestabilidad"><label>Inestabilidad economica familiar</label></div>
+        <div class="checkbox-item" onclick="app.toggleCheckbox(this,'nna_economico_apoyo')"><input type="checkbox" id="nna_economico_apoyo"><label>Necesidad de apoyo economico para escolarizacion</label></div>
+        <div class="checkbox-item" onclick="app.toggleCheckbox(this,'nna_economico_otro')"><input type="checkbox" id="nna_economico_otro"><label>Otro</label></div>
+      </div>
+    </div>
+
+    <div class="section-title">V. Seguimiento</div>
+    <div class="card">
+      <div class="form-group"><label class="form-label">Esta inscrito en alguna escuela actualmente?</label>
+        <div class="radio-group"><div class="radio-item" onclick="app.selectRadio(this,'nna_inscrito','SI')"><input type="radio" name="nna_inscrito" value="SI"><label>SI</label></div><div class="radio-item" onclick="app.selectRadio(this,'nna_inscrito','NO')"><input type="radio" name="nna_inscrito" value="NO"><label>NO</label></div></div></div>
+      <div class="form-group"><label class="form-label">Fecha de inscripcion (si aplica)</label><input type="date" class="form-input" id="nna_fecha_inscripcion"></div>
+      <div class="form-group"><label class="form-label">Notas de seguimiento</label><textarea class="form-textarea" id="nna_notas" placeholder="Observaciones adicionales..."></textarea></div>
+      <div class="form-group"><label class="form-label">Estado del Caso</label><select class="form-select" id="nna_estado_caso"><option value="pendiente">Pendiente</option><option value="en_proceso">En Proceso</option><option value="atendido">Atendido</option><option value="cerrado">Cerrado</option></select></div>
+    </div>
+
+    <button class="btn btn-primary btn-lg" onclick="app.guardarEncuesta('nna')">Guardar Encuesta</button>
+    <button class="btn btn-secondary" onclick="app.goToMenu()">Volver al Menu</button>
+  </div>
+</div>
+
+<!-- QUEUE / SYNC -->
+<div class="screen" id="screenQueue">
+  <div class="content">
+    <div class="card">
+      <div class="card-title">Encuestas Pendientes</div>
+      <div id="queueList"><div style="text-align:center;padding:30px;color:#999"><div style="font-size:2rem;margin-bottom:10px">📭</div><div>No hay encuestas pendientes</div></div></div>
+    </div>
+    <div class="card" id="syncResult" style="display:none">
+      <div class="card-title">Resultado de Sincronizacion</div>
+      <div id="syncResultText"></div>
+    </div>
+    <button class="btn btn-success btn-lg" id="btnSync" onclick="app.sincronizar()">Sincronizar Ahora</button>
+    <button class="btn btn-secondary" onclick="app.goToMenu()">Volver al Menu</button>
+  </div>
+</div>
+
+<!-- ADMIN DASHBOARD -->
+<div class="screen" id="screenDashboard">
+  <div class="content">
+    <div class="card">
+      <div class="card-title">Resumen General</div>
+      <div class="dashboard-grid">
+        <div class="dashboard-card"><div class="d-number" id="dashTotal">0</div><div class="d-label">Total Encuestas</div></div>
+        <div class="dashboard-card"><div class="d-number" id="dashAdultosVerif">0</div><div class="d-label">Adultos Verif.</div></div>
+        <div class="dashboard-card"><div class="d-number" id="dashAdultosReg">0</div><div class="d-label">Adultos Registro</div></div>
+        <div class="dashboard-card"><div class="d-number" id="dashNNA">0</div><div class="d-label">NNA</div></div>
+      </div>
+    </div>
+    <div class="card"><div class="card-title">Por Encuestador</div><div id="dashPorEncuestador" style="font-size:.85rem;color:#666">Cargando...</div></div>
+    <div class="card"><div class="card-title">Por Estado</div><div id="dashPorEstado" style="font-size:.85rem;color:#666">Cargando...</div></div>
+    <button class="btn btn-primary" onclick="app.cargarDashboard()">Actualizar</button>
+    <button class="btn btn-secondary" onclick="app.goToMenu()">Volver al Menu</button>
+  </div>
+</div>
+
+<!-- ADMIN ENCUESTADORES -->
+<div class="screen" id="screenEncuestadores">
+  <div class="content">
+    <div class="card">
+      <div class="card-title">Nuevo Encuestador</div>
+      <div class="form-group"><label class="form-label">Nombre Completo</label><input type="text" class="form-input" id="new_enc_nombre" placeholder="Ej: Maria Garcia"></div>
+      <div class="form-group"><label class="form-label">PIN (4 digitos)</label><input type="text" class="form-input" id="new_enc_pin" placeholder="Ej: 1234" maxlength="4" inputmode="numeric"></div>
+      <button class="btn btn-primary" onclick="app.agregarEncuestador()">Guardar Encuestador</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Encuestadores Registrados</div>
+      <div id="listaEncuestadores"><div style="text-align:center;padding:20px;color:#999">Cargando...</div></div>
+    </div>
+    <button class="btn btn-secondary" onclick="app.goToMenu()">Volver al Menu</button>
+  </div>
+</div>
+
+<nav class="bottom-nav" id="bottomNav" style="display:none">
+  <button class="nav-item active" onclick="app.goToMenu()"><span class="nav-icon">🏠</span><span>Inicio</span></button>
+  <button class="nav-item" onclick="app.goToQueue()"><span class="nav-icon">📤</span><span id="navSyncCount">Sync</span></button>
+  <button class="nav-item" onclick="app.logout()"><span class="nav-icon">🚪</span><span>Salir</span></button>
+</nav>
+
+</div>
+<script>
+const CFG = {
+  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbynQlOVqEA4oHUbXrXFwRnqOmZHCY4q0ibxqqfcWp1X7xWhoWbgveqJgtTUHknVnAxo/exec',
+  APP_VERSION: '3.0.0',
+  DB_NAME: 'DiagSocialDB',
+  DB_VERSION: 1,
+  STORE_QUEUE: 'encuestasPendientes',
+  STORE_VECINOS: 'vecinosCache',
+  STORE_SESSION: 'session'
+};
+
+class DiagSocialApp {
+  constructor() {
+    this.session = null;
+    this.vecinos = [];
+    this.pinBuffer = '';
+    this.gps = { lat: '', lon: '', precision: '' };
+    this.db = null;
+    this.isOnline = navigator.onLine;
+    this.init();
+  }
+
+  async init() {
+    await this.initDB();
+    this.checkOnlineStatus();
+    this.setupEventListeners();
+    this.loadSession();
+    this.getGPS();
+  }
+
+  // ========== INDEXEDDB ==========
+  initDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(CFG.DB_NAME, CFG.DB_VERSION);
+      req.onerror = () => reject(req.error);
+      req.onsuccess = () => { this.db = req.result; resolve(); };
+      req.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(CFG.STORE_QUEUE)) db.createObjectStore(CFG.STORE_QUEUE, { keyPath: 'id' });
+        if (!db.objectStoreNames.contains(CFG.STORE_VECINOS)) db.createObjectStore(CFG.STORE_VECINOS, { keyPath: 'Cedula' });
+        if (!db.objectStoreNames.contains(CFG.STORE_SESSION)) db.createObjectStore(CFG.STORE_SESSION, { keyPath: 'key' });
+      };
+    });
+  }
+
+  dbPut(store, data) {
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction(store, 'readwrite');
+      const st = tx.objectStore(store);
+      const req = st.put(data);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  dbGet(store, key) {
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction(store, 'readonly');
+      const st = tx.objectStore(store);
+      const req = st.get(key);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  dbGetAll(store) {
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction(store, 'readonly');
+      const st = tx.objectStore(store);
+      const req = st.getAll();
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  dbDelete(store, key) {
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction(store, 'readwrite');
+      const st = tx.objectStore(store);
+      const req = st.delete(key);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  // ========== SESSION ==========
+  async loadSession() {
+    const sess = await this.dbGet(CFG.STORE_SESSION, 'current');
+    if (sess && sess.data) { this.session = sess.data; this.goToMenu(); }
+  }
+
+  async saveSession() {
+    if (this.session) await this.dbPut(CFG.STORE_SESSION, { key: 'current', data: this.session });
+  }
+
+  async clearSession() {
+    await this.dbDelete(CFG.STORE_SESSION, 'current');
+    this.session = null;
+  }
+
+  // ========== ONLINE STATUS ==========
+  checkOnlineStatus() {
+    const update = () => {
+      this.isOnline = navigator.onLine;
+      const el = document.getElementById('onlineStatus');
+      if (el) { el.textContent = this.isOnline ? 'ONLINE' : 'OFFLINE'; el.className = 'status-badge ' + (this.isOnline ? 'online' : 'offline'); }
+      if (this.isOnline && this.session) this.cargarVecinos();
+    };
+    window.addEventListener('online', update);
+    window.addEventListener('offline', update);
+    update();
+  }
+
+  // ========== GPS ==========
+  getGPS() {
+    if (!navigator.geolocation) { this.updateGPSStatus('GPS no disponible', false); return; }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        this.gps = { lat: pos.coords.latitude.toFixed(6), lon: pos.coords.longitude.toFixed(6), precision: pos.coords.accuracy.toFixed(1) };
+        this.updateGPSStatus('GPS: ' + this.gps.lat + ', ' + this.gps.lon, true);
+      },
+      (err) => { this.updateGPSStatus('GPS: ' + err.message, false); },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    );
+  }
+
+  updateGPSStatus(text, active) {
+    const dots = ['gpsDotVerif','gpsDotReg','gpsDotNNA'];
+    const texts = ['gpsTextVerif','gpsTextReg','gpsTextNNA'];
+    dots.forEach(id => { const el = document.getElementById(id); if (el) el.classList.toggle('active', active); });
+    texts.forEach(id => { const el = document.getElementById(id); if (el) el.textContent = text; });
+  }
+
+  // ========== NAVIGATION ==========
+  showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const screen = document.getElementById(id);
+    if (screen) screen.classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  goToMenu() {
+    if (!this.session) { this.showScreen('screenLogin'); return; }
+    document.getElementById('userName').textContent = this.session.nombre || 'Encuestador';
+    document.getElementById('userRole').textContent = 'Rol: ' + (this.session.rol === 'admin' ? 'Administrador' : 'Encuestador');
+    document.getElementById('adminMenu').style.display = this.session.rol === 'admin' ? 'block' : 'none';
+    document.getElementById('bottomNav').style.display = 'flex';
+    this.updateQueueCount();
+    this.showScreen('screenMenu');
+  }
+
+  goToSurvey(type) {
+    this.getGPS();
+    const map = { 'adultos_verif': 'screenAdultosVerif', 'adultos_reg': 'screenAdultosReg', 'nna': 'screenNNA' };
+    this.showScreen(map[type] || 'screenMenu');
+  }
+
+  goToQueue() {
+    this.renderQueue();
+    this.showScreen('screenQueue');
+  }
+
+  goToDashboard() {
+    this.cargarDashboard();
+    this.showScreen('screenDashboard');
+  }
+
+  goToEncuestadores() {
+    this.cargarEncuestadores();
+    this.showScreen('screenEncuestadores');
+  }
+
+  logout() {
+    this.clearSession();
+    this.pinBuffer = '';
+    this.updatePinDisplay();
+    document.getElementById('loginError').textContent = '';
+    document.getElementById('bottomNav').style.display = 'none';
+    this.showScreen('screenLogin');
+    this.showToast('Sesion cerrada', 'info');
+  }
+
+  // ========== PIN LOGIN ==========
+  addPin(n) {
+    if (this.pinBuffer.length < 4) { this.pinBuffer += n; this.updatePinDisplay(); }
+  }
+
+  clearPin() {
+    this.pinBuffer = this.pinBuffer.slice(0, -1);
+    this.updatePinDisplay();
+  }
+
+  updatePinDisplay() {
+    document.querySelectorAll('.pin-dot').forEach((d, i) => d.classList.toggle('filled', i < this.pinBuffer.length));
+  }
+
+  async submitLogin() {
+    if (this.pinBuffer.length !== 4) { document.getElementById('loginError').textContent = 'Ingrese 4 digitos'; return; }
+    document.getElementById('loginError').textContent = 'Verificando...';
+    try {
+      const res = await this.apiPost({ action: 'login', pin: this.pinBuffer });
+      if (res.success) {
+        this.session = res.encuestador;
+        this.session.pin = this.pinBuffer;
+        this.session.esAdmin = res.esAdmin;
+        await this.saveSession();
+        this.pinBuffer = '';
+        this.updatePinDisplay();
+        document.getElementById('loginError').textContent = '';
+        this.goToMenu();
+        this.showToast('Bienvenido ' + this.session.nombre, 'success');
+      } else {
+        document.getElementById('loginError').textContent = res.error || 'PIN incorrecto';
+        this.pinBuffer = '';
+        this.updatePinDisplay();
+      }
+    } catch (e) {
+      // Offline fallback: check if PIN is admin
+      if (this.pinBuffer === '0000') {
+        this.session = { id: 'ADMIN', nombre: 'Administrador', rol: 'admin', pin: '0000', esAdmin: true };
+        await this.saveSession();
+        this.pinBuffer = ''; this.updatePinDisplay();
+        document.getElementById('loginError').textContent = '';
+        this.goToMenu();
+        this.showToast('Modo offline - Admin', 'info');
+      } else {
+        document.getElementById('loginError').textContent = 'Sin conexion. Solo PIN admin disponible.';
+        this.pinBuffer = ''; this.updatePinDisplay();
+      }
+    }
+  }
+
+  // ========== API ==========
+  async apiPost(data) {
+    const url = CFG.SCRIPT_URL;
+    const resp = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(data) });
+    return await resp.json();
+  }
+
+  async apiGet(action, pin) {
+    const url = CFG.SCRIPT_URL + '?action=' + action + '&pin=' + pin;
+    const resp = await fetch(url);
+    return await resp.json();
+  }
+
+  // ========== VECINOS / AUTOCOMPLETE ==========
+  async cargarVecinos() {
+    if (!this.isOnline || !this.session) return;
+    try {
+      const res = await this.apiGet('getVecinos', this.session.pin);
+      if (res.success && res.vecinos) {
+        this.vecinos = res.vecinos;
+        for (const v of res.vecinos) await this.dbPut(CFG.STORE_VECINOS, v);
+      }
+    } catch (e) {
+      const cached = await this.dbGetAll(CFG.STORE_VECINOS);
+      this.vecinos = cached || [];
+    }
+  }
+
+  buscarVecino(valor, prefijo) {
+    const list = document.getElementById('ac_' + prefijo);
+    if (!list) return;
+    if (!valor || valor.length < 2) { list.classList.remove('visible'); return; }
+    const filtrados = this.vecinos.filter(v => {
+      const cedula = (v.Cedula || '').toString().toLowerCase();
+      const nombre = (v.Nombre_Apellido || '').toString().toLowerCase();
+      const q = valor.toLowerCase();
+      return cedula.includes(q) || nombre.includes(q);
+    }).slice(0, 5);
+    if (filtrados.length === 0) { list.classList.remove('visible'); return; }
+    list.innerHTML = filtrados.map(v => '<div class="autocomplete-item" onclick="app.seleccionarVecino(&quot;' + prefijo + '&quot;,&quot;' + (v.Cedula || '').replace(/"/g, '\"') + '&quot;,&quot;' + (v.Nombre_Apellido || '').replace(/"/g, '\"') + '&quot;,&quot;' + (v.Telefono || '').replace(/"/g, '\"') + '&quot;)"><span class="ac-cedula">' + (v.Cedula || '') + '</span><br><span class="ac-nombre">' + (v.Nombre_Apellido || '') + '</span></div>').join('');
+    list.classList.add('visible');
+  }
+
+  seleccionarVecino(prefijo, cedula, nombre, telefono) {
+    const map = { 'av': ['av_cedula','av_nombre'], 'ar': ['ar_cedula','ar_nombre','ar_telefono'], 'rep': ['rep_cedula','rep_nombre','rep_telefono'] };
+    const ids = map[prefijo];
+    if (ids[0]) document.getElementById(ids[0]).value = cedula;
+    if (ids[1]) document.getElementById(ids[1]).value = nombre;
+    if (ids[2] && telefono) document.getElementById(ids[2]).value = telefono;
+    document.getElementById('ac_' + prefijo).classList.remove('visible');
+    this.showToast('Datos autocompletados', 'success');
+  }
+
+  // ========== FORM HELPERS ==========
+  selectRadio(el, name, value) {
+    const radios = document.querySelectorAll('input[name="' + name + '"]');
+    radios.forEach(r => { r.checked = r.value === value; r.closest('.radio-item').classList.toggle('selected', r.value === value); });
+    // Show/hide health details for adultos_verif
+    if (name === 'av_salud_dep') {
+      const det = document.getElementById('av_salud_detalle');
+      if (det) det.style.display = value === 'SI' ? 'block' : 'none';
+    }
+  }
+
+  toggleCheckbox(el, id) {
+    const cb = document.getElementById(id);
+    if (cb) { cb.checked = !cb.checked; el.classList.toggle('selected', cb.checked); }
+  }
+
+  getRadioValue(name) {
+    const r = document.querySelector('input[name="' + name + '"]:checked');
+    return r ? r.value : '';
+  }
+
+  getCheckboxValue(id) {
+    const cb = document.getElementById(id);
+    return cb && cb.checked ? 'SI' : 'NO';
+  }
+
+  // ========== GUARDAR ENCUESTA ==========
+  async guardarEncuesta(tipo) {
+    const now = new Date();
+    const fecha = now.toISOString();
+    const encuestador = this.session ? this.session.nombre : 'Desconocido';
+    const id = tipo + '_' + Date.now() + '_' + (this.session ? this.session.id : 'X');
+
+    let datos = {};
+    let valido = true;
+
+    if (tipo === 'adultos_verif') {
+      const cedula = document.getElementById('av_cedula').value.trim();
+      const nombre = document.getElementById('av_nombre').value.trim();
+      if (!cedula || !nombre) { this.showToast('Cedula y nombre son obligatorios', 'error'); return; }
+      datos = {
+        cedula, nombre_apellido: nombre,
+        fecha_nacimiento: document.getElementById('av_fecha_nac').value,
+        edad: document.getElementById('av_edad').value,
+        vive_solo: this.getRadioValue('av_vive_solo'),
+        sosten: this.getRadioValue('av_sosten'),
+        ingresos_suficientes: this.getRadioValue('av_ingresos'),
+        salud_dependencia: this.getRadioValue('av_salud_dep'),
+        salud_encamado: this.getCheckboxValue('av_salud_encamado'),
+        salud_parkinson: this.getCheckboxValue('av_salud_parkinson'),
+        salud_alzheimer: this.getCheckboxValue('av_salud_alzheimer'),
+        salud_trastorno: this.getCheckboxValue('av_salud_trastorno'),
+        salud_insuf_renal: this.getCheckboxValue('av_salud_renal'),
+        salud_cancer: this.getCheckboxValue('av_salud_cancer'),
+        salud_insuf_cardiaca: this.getCheckboxValue('av_salud_cardiaca'),
+        salud_artritis: this.getCheckboxValue('av_salud_artritis'),
+        salud_esclerosis: this.getCheckboxValue('av_salud_esclerosis'),
+        salud_otro: this.getCheckboxValue('av_salud_otro'),
+        necesidad: document.getElementById('av_necesidad').value,
+        estadoCaso: document.getElementById('av_estado_caso').value,
+        geograficos: { estado: document.getElementById('av_estado').value, municipio: document.getElementById('av_municipio').value, parroquia: document.getElementById('av_parroquia').value, circuito: document.getElementById('av_circuito').value, consejo: document.getElementById('av_consejo').value, calle: document.getElementById('av_calle').value },
+        gps: this.gps
+      };
+    } else if (tipo === 'adultos_reg') {
+      const cedula = document.getElementById('ar_cedula').value.trim();
+      const nombre = document.getElementById('ar_nombre').value.trim();
+      if (!cedula || !nombre) { this.showToast('Cedula y nombre son obligatorios', 'error'); return; }
+      datos = {
+        cedula, nombre_apellido: nombre,
+        fecha_nacimiento: document.getElementById('ar_fecha_nac').value,
+        edad: document.getElementById('ar_edad').value,
+        telefono: document.getElementById('ar_telefono').value,
+        vive_solo_detalle: this.getRadioValue('ar_vive_solo'),
+        cant_miembros: this.getRadioValue('ar_cant_miembros'),
+        miembros_ingreso: this.getRadioValue('ar_miembros_ingreso'),
+        sosten: this.getRadioValue('ar_sosten'),
+        situacion_vivienda: document.getElementById('ar_situacion_vivienda').value,
+        salud_encamado: this.getCheckboxValue('ar_salud_encamado'),
+        salud_parkinson: this.getCheckboxValue('ar_salud_parkinson'),
+        salud_alzheimer: this.getCheckboxValue('ar_salud_alzheimer'),
+        salud_trastorno: this.getCheckboxValue('ar_salud_trastorno'),
+        salud_insuf_renal: this.getCheckboxValue('ar_salud_renal'),
+        salud_cancer: this.getCheckboxValue('ar_salud_cancer'),
+        salud_insuf_cardiaca: this.getCheckboxValue('ar_salud_cardiaca'),
+        salud_artritis: this.getCheckboxValue('ar_salud_artritis'),
+        salud_esclerosis: this.getCheckboxValue('ar_salud_esclerosis'),
+        salud_otro: this.getCheckboxValue('ar_salud_otro'),
+        situacion_economica: this.getRadioValue('ar_economica'),
+        necesidad: document.getElementById('ar_necesidad').value,
+        estadoCaso: document.getElementById('ar_estado_caso').value,
+        autocompletado: document.getElementById('ar_nombre').dataset.autocompletado === 'true' ? 'SI' : 'NO',
+        geograficos: { estado: document.getElementById('ar_estado').value, municipio: document.getElementById('ar_municipio').value, parroquia: document.getElementById('ar_parroquia').value, circuito: document.getElementById('ar_circuito').value, consejo: document.getElementById('ar_consejo').value, calle: document.getElementById('ar_calle').value },
+        gps: this.gps
+      };
+    } else if (tipo === 'nna') {
+      const nombre = document.getElementById('nna_nombre').value.trim();
+      if (!nombre) { this.showToast('Nombre del NNA es obligatorio', 'error'); return; }
+      datos = {
+        nna_cedula: document.getElementById('nna_cedula').value,
+        nna_nombre_apellido: nombre,
+        nna_fecha_nacimiento: document.getElementById('nna_fecha_nac').value,
+        nna_edad: document.getElementById('nna_edad').value,
+        nna_grado: document.getElementById('nna_grado').value,
+        rep_cedula: document.getElementById('rep_cedula').value,
+        rep_nombre_apellido: document.getElementById('rep_nombre').value,
+        rep_telefono: document.getElementById('rep_telefono').value,
+        rep_parentesco: document.getElementById('rep_parentesco').value,
+        rep_autocompletado: document.getElementById('rep_nombre').dataset.autocompletado === 'true' ? 'SI' : 'NO',
+        doc_falta_cedula: this.getCheckboxValue('nna_doc_cedula'),
+        doc_falta_partida: this.getCheckboxValue('nna_doc_partida'),
+        doc_falta_constancia: this.getCheckboxValue('nna_doc_constancia'),
+        doc_otro: this.getCheckboxValue('nna_doc_otro'),
+        acceso_lejania: this.getCheckboxValue('nna_acceso_lejania'),
+        acceso_transporte: this.getCheckboxValue('nna_acceso_transporte'),
+        acceso_riesgos: this.getCheckboxValue('nna_acceso_riesgos'),
+        acceso_otro: this.getCheckboxValue('nna_acceso_otro'),
+        laboral_aportar: this.getCheckboxValue('nna_laboral_aportar'),
+        laboral_informal: this.getCheckboxValue('nna_laboral_informal'),
+        laboral_rep: this.getCheckboxValue('nna_laboral_rep'),
+        laboral_hermanos: this.getCheckboxValue('nna_laboral_hermanos'),
+        laboral_otro: this.getCheckboxValue('nna_laboral_otro'),
+        tutelaje_ausencia: this.getCheckboxValue('nna_tutelaje_ausencia'),
+        tutelaje_desconocimiento: this.getCheckboxValue('nna_tutelaje_desconocimiento'),
+        tutelaje_acompanamiento: this.getCheckboxValue('nna_tutelaje_acompanamiento'),
+        tutelaje_otro: this.getCheckboxValue('nna_tutelaje_otro'),
+        economico_utiles: this.getCheckboxValue('nna_economico_utiles'),
+        economico_alimentacion: this.getCheckboxValue('nna_economico_alimentacion'),
+        economico_deudas: this.getCheckboxValue('nna_economico_deudas'),
+        economico_inestabilidad: this.getCheckboxValue('nna_economico_inestabilidad'),
+        economico_apoyo: this.getCheckboxValue('nna_economico_apoyo'),
+        economico_otro: this.getCheckboxValue('nna_economico_otro'),
+        inscrito_escuela: this.getRadioValue('nna_inscrito'),
+        fecha_inscripcion: document.getElementById('nna_fecha_inscripcion').value,
+        notas_seguimiento: document.getElementById('nna_notas').value,
+        estadoCaso: document.getElementById('nna_estado_caso').value,
+        geograficos: { estado: document.getElementById('nna_estado').value, municipio: document.getElementById('nna_municipio').value, parroquia: document.getElementById('nna_parroquia').value, circuito: document.getElementById('nna_circuito').value, consejo: document.getElementById('nna_consejo').value, calle: document.getElementById('nna_calle').value },
+        gps: this.gps
+      };
+    }
+
+    const encuesta = { id, tipo, fecha, encuestador, datos, versionApp: CFG.APP_VERSION, pin: this.session ? this.session.pin : '' };
+
+    // Try online first
+    if (this.isOnline) {
+      try {
+        const res = await this.apiPost({ action: 'guardarEncuesta', pin: this.session.pin, encuesta });
+        if (res.success) {
+          this.showToast('Encuesta guardada en servidor', 'success');
+          this.limpiarFormulario(tipo);
+          this.goToMenu();
+          return;
+        }
+      } catch (e) { /* fall through to offline */ }
+    }
+
+    // Offline: save to IndexedDB
+    await this.dbPut(CFG.STORE_QUEUE, encuesta);
+    this.updateQueueCount();
+    this.showToast('Encuesta guardada offline (' + this.getQueueCount() + ' pendientes)', 'info');
+    this.limpiarFormulario(tipo);
+    this.goToMenu();
+  }
+
+  limpiarFormulario(tipo) {
+    const prefix = tipo === 'adultos_verif' ? 'av_' : tipo === 'adultos_reg' ? 'ar_' : 'nna_';
+    document.querySelectorAll('input[id^="' + prefix + '"], textarea[id^="' + prefix + '"], select[id^="' + prefix + '"]').forEach(el => {
+      if (el.type === 'checkbox') el.checked = false;
+      else if (el.type === 'radio') el.checked = false;
+      else el.value = '';
+    });
+    // Also clear rep_ fields for NNA
+    if (tipo === 'nna') {
+      document.querySelectorAll('input[id^="rep_"], select[id^="rep_"]').forEach(el => el.value = '');
+    }
+    document.querySelectorAll('.radio-item.selected, .checkbox-item.selected').forEach(el => el.classList.remove('selected'));
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    const det = document.getElementById('av_salud_detalle');
+    if (det) det.style.display = 'none';
+  }
+
+  // ========== QUEUE / SYNC ==========
+  async getQueueCount() {
+    const all = await this.dbGetAll(CFG.STORE_QUEUE);
+    return all.length;
+  }
+
+  async updateQueueCount() {
+    const count = await this.getQueueCount();
+    document.getElementById('queueCountDesc').textContent = count + ' pendientes';
+    document.getElementById('navSyncCount').textContent = count > 0 ? 'Sync (' + count + ')' : 'Sync';
+  }
+
+  async renderQueue() {
+    const all = await this.dbGetAll(CFG.STORE_QUEUE);
+    const list = document.getElementById('queueList');
+    if (all.length === 0) {
+      list.innerHTML = '<div style="text-align:center;padding:30px;color:#999"><div style="font-size:2rem;margin-bottom:10px">📭</div><div>No hay encuestas pendientes</div></div>';
+      return;
+    }
+    const labels = { 'adultos_verif': 'Adultos Verif.', 'adultos_reg': 'Adultos Reg.', 'nna': 'NNA' };
+    list.innerHTML = all.map(e => '<div class="queue-item"><div class="q-info"><div class="q-type">' + (labels[e.tipo] || e.tipo) + '</div><div class="q-date">' + new Date(e.fecha).toLocaleString() + '</div></div><div class="q-status">Pendiente</div></div>').join('');
+  }
+
+  async sincronizar() {
+    if (!this.isOnline) { this.showToast('Sin conexion a internet', 'error'); return; }
+    const all = await this.dbGetAll(CFG.STORE_QUEUE);
+    if (all.length === 0) { this.showToast('No hay encuestas para sincronizar', 'info'); return; }
+
+    const btn = document.getElementById('btnSync');
+    btn.disabled = true;
+    btn.textContent = 'Sincronizando...';
+
+    try {
+      const res = await this.apiPost({ action: 'guardarBatch', pin: this.session.pin, encuestas: all });
+      const resultDiv = document.getElementById('syncResult');
+      const resultText = document.getElementById('syncResultText');
+      if (res.success) {
+        // Clear all synced
+        for (const e of all) await this.dbDelete(CFG.STORE_QUEUE, e.id);
+        this.updateQueueCount();
+        this.renderQueue();
+        resultDiv.style.display = 'block';
+        resultText.innerHTML = '<div style="color:var(--success);font-weight:600">' + res.message + '</div>';
+        this.showToast('Sincronizacion exitosa', 'success');
+      } else {
+        resultDiv.style.display = 'block';
+        resultText.innerHTML = '<div style="color:var(--danger)">Error: ' + (res.error || 'Desconocido') + '</div>';
+        this.showToast('Error en sincronizacion', 'error');
+      }
+    } catch (e) {
+      document.getElementById('syncResult').style.display = 'block';
+      document.getElementById('syncResultText').innerHTML = '<div style="color:var(--danger)">Error de red: ' + e.message + '</div>';
+      this.showToast('Error de red', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Sincronizar Ahora';
+    }
+  }
+
+  // ========== ADMIN DASHBOARD ==========
+  async cargarDashboard() {
+    if (!this.isOnline) { this.showToast('Se requiere conexion para dashboard', 'error'); return; }
+    try {
+      const res = await this.apiGet('getResumenDashboard', this.session.pin);
+      if (res.success && res.resumen) {
+        const r = res.resumen;
+        document.getElementById('dashTotal').textContent = r.total;
+        document.getElementById('dashAdultosVerif').textContent = r.adultos_verif;
+        document.getElementById('dashAdultosReg').textContent = r.adultos_reg;
+        document.getElementById('dashNNA').textContent = r.nna;
+        let encHtml = '';
+        for (const [k, v] of Object.entries(r.por_encuestador || {})) encHtml += '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee"><span>' + k + '</span><strong>' + v + '</strong></div>';
+        document.getElementById('dashPorEncuestador').innerHTML = encHtml || '<div style="color:#999">Sin datos</div>';
+        let estHtml = '';
+        for (const [k, v] of Object.entries(r.por_estado || {})) estHtml += '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee"><span>' + k + '</span><strong>' + v + '</strong></div>';
+        document.getElementById('dashPorEstado').innerHTML = estHtml || '<div style="color:#999">Sin datos</div>';
+      }
+    } catch (e) {
+      this.showToast('Error cargando dashboard', 'error');
+    }
+  }
+
+  // ========== ADMIN ENCUESTADORES ==========
+  async cargarEncuestadores() {
+    if (!this.isOnline) { this.showToast('Se requiere conexion', 'error'); return; }
+    try {
+      const res = await this.apiGet('getEncuestadores', this.session.pin);
+      const list = document.getElementById('listaEncuestadores');
+      if (res.success && res.encuestadores) {
+        if (res.encuestadores.length === 0) { list.innerHTML = '<div style="text-align:center;color:#999">No hay encuestadores</div>'; return; }
+        list.innerHTML = res.encuestadores.map(e => '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #eee"><span>' + (e.nombre || 'Sin nombre') + '</span><span style="font-size:.8rem;color:#666">' + (e.activo ? 'Activo' : 'Inactivo') + '</span></div>').join('');
+      }
+    } catch (e) { this.showToast('Error cargando encuestadores', 'error'); }
+  }
+
+  async agregarEncuestador() {
+    const nombre = document.getElementById('new_enc_nombre').value.trim();
+    const pin = document.getElementById('new_enc_pin').value.trim();
+    if (!nombre || !pin) { this.showToast('Nombre y PIN son obligatorios', 'error'); return; }
+    if (!/^\d{4}$/.test(pin)) { this.showToast('PIN debe ser exactamente 4 digitos', 'error'); return; }
+    this.showToast('Funcion de agregar encuestador requiere implementacion en Apps Script', 'info');
+  }
+
+  // ========== TOAST ==========
+  showToast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast ' + type;
+    setTimeout(() => t.classList.add('show'), 10);
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  // ========== EVENT LISTENERS ==========
+  setupEventListeners() {
+    // Close autocomplete on click outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.autocomplete-wrap')) {
+        document.querySelectorAll('.autocomplete-list').forEach(l => l.classList.remove('visible'));
+      }
+    });
+  }
+}
+
+const app = new DiagSocialApp();
+</script>
+</body>
+</html>
