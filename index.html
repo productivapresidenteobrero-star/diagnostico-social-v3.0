@@ -490,7 +490,7 @@ body{position:relative}
 </div>
 <script>
 const CFG = {
-  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbynQlOVqEA4oHUbXrXFwRnqOmZHCY4q0ibxqqfcWp1X7xWhoWbgveqJgtTUHknVnAxo/exec',
+  SCRIPT_URL: 'https://script.google.com/macros/s/TU_SCRIPT_ID/exec',
   APP_VERSION: '3.0.0',
   DB_NAME: 'DiagSocialDB',
   DB_VERSION: 1,
@@ -752,11 +752,15 @@ class DiagSocialApp {
     const list = document.getElementById('ac_' + prefijo);
     if (!list) return;
     if (!valor || valor.length < 2) { list.classList.remove('visible'); return; }
+    // Limpiar cedula de busqueda: quitar puntos, espacios, guiones
+    const qLimpio = valor.toLowerCase().replace(/[.\s\-]/g, '');
     const filtrados = this.vecinos.filter(v => {
-      const cedula = (v.Cedula || '').toString().toLowerCase();
+      const cedulaRaw = (v.Cedula || '').toString();
+      const cedulaLimpia = cedulaRaw.toLowerCase().replace(/[.\s\-]/g, '');
       const nombre = (v.Nombre_Apellido || '').toString().toLowerCase();
       const q = valor.toLowerCase();
-      return cedula.includes(q) || nombre.includes(q);
+      // Buscar por cedula limpia O cedula original O nombre
+      return cedulaLimpia.includes(qLimpio) || cedulaRaw.toLowerCase().includes(q) || nombre.includes(q);
     }).slice(0, 5);
     if (filtrados.length === 0) { list.classList.remove('visible'); return; }
     list.innerHTML = filtrados.map(v => '<div class="autocomplete-item" onclick="app.seleccionarVecino(&quot;' + prefijo + '&quot;,&quot;' + (v.Cedula || '').replace(/"/g, '\"') + '&quot;,&quot;' + (v.Nombre_Apellido || '').replace(/"/g, '\"') + '&quot;,&quot;' + (v.Telefono || '').replace(/"/g, '\"') + '&quot;)"><span class="ac-cedula">' + (v.Cedula || '') + '</span><br><span class="ac-nombre">' + (v.Nombre_Apellido || '') + '</span></div>').join('');
@@ -766,11 +770,19 @@ class DiagSocialApp {
   seleccionarVecino(prefijo, cedula, nombre, telefono) {
     const map = { 'av': ['av_cedula','av_nombre'], 'ar': ['ar_cedula','ar_nombre','ar_telefono'], 'rep': ['rep_cedula','rep_nombre','rep_telefono'] };
     const ids = map[prefijo];
-    if (ids[0]) document.getElementById(ids[0]).value = cedula;
-    if (ids[1]) document.getElementById(ids[1]).value = nombre;
+    // Guardar cedula limpia (sin puntos) para busquedas futuras
+    const cedulaLimpia = cedula.replace(/[.\s\-]/g, '');
+    if (ids[0]) { 
+      document.getElementById(ids[0]).value = cedulaLimpia; 
+      document.getElementById(ids[0]).dataset.autocompletado = 'true';
+    }
+    if (ids[1]) { 
+      document.getElementById(ids[1]).value = nombre; 
+      document.getElementById(ids[1]).dataset.autocompletado = 'true';
+    }
     if (ids[2] && telefono) document.getElementById(ids[2]).value = telefono;
     document.getElementById('ac_' + prefijo).classList.remove('visible');
-    this.showToast('Datos autocompletados', 'success');
+    this.showToast('Autocompletado: ' + nombre, 'success');
   }
 
   // ========== FORM HELPERS ==========
@@ -815,8 +827,6 @@ class DiagSocialApp {
       if (!cedula || !nombre) { this.showToast('Cedula y nombre son obligatorios', 'error'); return; }
       datos = {
         cedula, nombre_apellido: nombre,
-        fecha_nacimiento: document.getElementById('av_fecha_nac').value,
-        edad: document.getElementById('av_edad').value,
         vive_solo: this.getRadioValue('av_vive_solo'),
         sosten: this.getRadioValue('av_sosten'),
         ingresos_suficientes: this.getRadioValue('av_ingresos'),
@@ -833,7 +843,7 @@ class DiagSocialApp {
         salud_otro: this.getCheckboxValue('av_salud_otro'),
         necesidad: document.getElementById('av_necesidad').value,
         estadoCaso: document.getElementById('av_estado_caso').value,
-        geograficos: { estado: document.getElementById('av_estado').value, municipio: document.getElementById('av_municipio').value, parroquia: document.getElementById('av_parroquia').value, circuito: document.getElementById('av_circuito').value, consejo: document.getElementById('av_consejo').value, calle: document.getElementById('av_calle').value },
+        consejo_comunal: document.getElementById('av_consejo').value,
         gps: this.gps
       };
     } else if (tipo === 'adultos_reg') {
